@@ -6,9 +6,8 @@ from sklearn.preprocessing import MinMaxScaler
 from torch.autograd import Variable
 from sklearn.metrics import mean_squared_error
 
-
 # Dataset
-data_file = open('01.txt', 'r')
+data_file = open('data.txt', 'r')
 days_with_known_temp = int(data_file.readline())
 train_max_temps = [[float(data_file.readline())] for i in range(days_with_known_temp)]
 days_with_unknown_temp = int(data_file.readline())
@@ -25,6 +24,7 @@ num_layers = 1
 learning_rate = 10
 epochs = 400
 
+
 # LSTM NN
 class LSTMNet(nn.Module):
     def __init__(self, input_size, output_size, num_layers):
@@ -33,13 +33,13 @@ class LSTMNet(nn.Module):
         self.num_layers = num_layers
         self.lstm = nn.LSTM(input_size, output_size, num_layers=num_layers, dtype=torch.double)
 
-
     def forward(self, x, h0=None, c0=None):
         if h0 is None and c0 is None:
             h0 = torch.zeros(self.num_layers, self.output_size, dtype=torch.double)
             c0 = torch.zeros(self.num_layers, self.output_size, dtype=torch.double)
         out, (hn, cn) = self.lstm(x, (h0, c0))
         return out, (hn, cn)
+
 
 model = LSTMNet(input_size, output_size, num_layers)
 
@@ -67,7 +67,8 @@ previous_day_fake_predictions.insert(0, train_max_temps[-1])
 previous_day_fake_predictions = torch.tensor(previous_day_fake_predictions, dtype=torch.double)
 
 test_input_inverse_transformed = torch.tensor(scaler.inverse_transform(test_data), dtype=torch.double)
-test_prediction_inverse_transformed = torch.tensor(scaler.inverse_transform(test_prediction.detach().numpy()), dtype=torch.double)
+test_prediction_inverse_transformed = torch.tensor(scaler.inverse_transform(test_prediction.detach().numpy()),
+                                                   dtype=torch.double)
 test_prediction_rmse_loss = np.sqrt(criterion(test_prediction_inverse_transformed, test_input_inverse_transformed).data)
 print(f'Total Test Prediction RMSE Loss: {test_prediction_rmse_loss}')
 previous_day_fake_rmse_loss = np.sqrt(criterion(previous_day_fake_predictions, test_input_inverse_transformed).data)
